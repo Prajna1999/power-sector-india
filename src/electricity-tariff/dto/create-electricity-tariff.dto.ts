@@ -14,7 +14,7 @@ export class CreateElectricityTariffDto {
     effectiveDate:Date;
 
     @IsString()
-    @IsIn(['HT', 'LT'])
+    @IsIn(['HT', 'LT', 'EHT'])
     supplyType:string;
 
     @IsString()

@@ -4,7 +4,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { CreateElectricityTariffDto } from './dto/create-electricity-tariff.dto';
 import { UpdateElectricityTariffDto } from './dto/update-electricity-tariff.dto';
 import { ElectricityTariff } from './schemas/electricity-tariff.schema';
-import { stat } from 'fs';
+import { FilterElectricityDto } from './dto/filter-electricity-tariff.dto';
+
 
 @Injectable()
 export class ElectricityTariffService {
@@ -36,6 +37,15 @@ export class ElectricityTariffService {
     return existingTariff;
 
  }
+ async findOneTariff(id:string):Promise<ElectricityTariff>{
+  this.validateId(id);
+  const tariff=await this.electricityTariffModel.findById(id).exec();
+  if(!tariff){
+    throw new NotFoundException(`Electricity Tariff with ID "${id}" does not exist.`);
+  }
+
+  return tariff;
+ }
  private async checkDuplicate(tariff:Partial<ElectricityTariff>, excludeId?:string):Promise<void>{
     const query={
         state:tariff.state,
@@ -52,10 +62,58 @@ export class ElectricityTariffService {
     if(existingTariff){
         throw new ConflictException('A tariff with the same state, effective date, supply type, consumer type and category already exists');
     }
-
-
  }
+ async findByFilters(filterDto: FilterElectricityDto): Promise<{count:number,tariffDetails:ElectricityTariff[]}> {
+  const matchQuery: Record<string, any> = {};
 
+  // Dynamically build the matchQuery object
+  Object.entries(filterDto).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      if (key === 'effectiveDate') {
+        matchQuery[key] = { $lte: new Date(value) };
+      } else if (key === 'governmentSubsidy') {
+        matchQuery[key] = value === 'true';
+      } else if (key === 'voltageLevel') {
+        // Use exact match for voltageLevel
+        matchQuery[key] = value;
+      } else {
+        // Use case-insensitive regex for other string fields
+        matchQuery[key] = { $regex: new RegExp(`^${value}$`, 'i') };
+      }
+    }
+  });
+  const aggregationPipeline = [
+    { $match: matchQuery },
+    // {$sort:{supplyType:-1}},
+    {
+      $group: {
+        _id: {
+          state: '$state',
+          stateCode: '$stateCode',
+          supplyType: '$supplyType',
+          category: '$category',
+          subcategory: '$subcategory',
+          consumerType: '$consumerType',
+          voltageLevel: '$voltageLevel'
+        },
+        latestTariff: { $first: '$$ROOT' }
+      }
+    },
+    { $replaceRoot: { newRoot: '$latestTariff' } },
+   
+  ];
+
+  const results = await this.electricityTariffModel.aggregate(aggregationPipeline);
+
+  if (results.length === 0) {
+    throw new NotFoundException('No matching tariffs found');
+  }
+
+  return {
+    count:results.length,
+    tariffDetails:results
+  }
+}
  private validateFilters(filters: Partial<ElectricityTariff>): void {
     const allowedFields = ['state','stateCode', 'effectiveDate', 'supplyType', 'category', 'subcategory', 'consumerType', 'voltageLevel', 'governmentSubsidy'];
     const invalidFields = Object.keys(filters).filter(key => !allowedFields.includes(key));
@@ -70,7 +128,6 @@ export class ElectricityTariffService {
     if (filters.supplyType && !['HT', 'LT'].includes(filters.supplyType)) {
       throw new BadRequestException('supplyType must be either "HT" or "LT"');
     }
-
     if (filters.governmentSubsidy !== undefined && typeof filters.governmentSubsidy !== 'boolean') {
       throw new BadRequestException('governmentSubsidy must be a boolean');
     }

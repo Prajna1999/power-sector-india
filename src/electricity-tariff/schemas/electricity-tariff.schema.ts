@@ -13,7 +13,7 @@ export class ElectricityTariff extends Document {
   effectiveDate: Date;
 
   @Prop({ required: true })
-  supplyType: string; // HT or LT
+  supplyType: string; // HT or LT or EHT
 
   @Prop({ required: true })
   category: string;

@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ValidationPipe, UsePipes } from '@nestjs/common';
 import { ElectricityTariffService } from './electricity-tariff.service';
 import { CreateElectricityTariffDto } from './dto/create-electricity-tariff.dto';
 import { UpdateElectricityTariffDto } from './dto/update-electricity-tariff.dto';
-
+import { FilterElectricityDto } from './dto/filter-electricity-tariff.dto';
+import { ElectricityTariff } from './schemas/electricity-tariff.schema';
 @Controller('electricity-tariff')
 export class ElectricityTariffController {
   constructor(private readonly electricityTariffService: ElectricityTariffService) {}
@@ -12,10 +13,20 @@ export class ElectricityTariffController {
     return this.electricityTariffService.createElectricityTariff(createElectricityTariffDto);
   }
 
-  @Patch("/:tariffId")
-  updateElectricityTariff(@Param('tariffId') tariffId:string, @Body() updateDto:UpdateElectricityTariffDto){
-    return this.electricityTariffService.updateElectricityTariff(tariffId, updateDto);
+  @Get()
+  @UsePipes(new ValidationPipe())
+  async findByFilters(@Query() filters:FilterElectricityDto){
+    return this.electricityTariffService.findByFilters(filters);
+  }
+  @Get("/:id")
+  async getOneTariff(@Param('id') id:string){
+    return this.electricityTariffService.findOneTariff(id);
+  }
+  @Patch("/:id")
+  async updateElectricityTariff(@Param('id') id:string, @Body() updateDto:UpdateElectricityTariffDto){
+    return this.electricityTariffService.updateElectricityTariff(id, updateDto);
   }
 
-  
+
+
 }
