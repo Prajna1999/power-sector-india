@@ -4,7 +4,6 @@ import { ConfigService } from '@nestjs/config';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import axios from 'axios';
-import { text } from 'stream/consumers';
 
 interface SearchItem{
     link:string;

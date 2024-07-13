@@ -3,9 +3,9 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class MailServiceService {
-    private mailerService:MailerService;
+   
     constructor(
-        
+        private mailerService:MailerService,
     ){}
   
 
