@@ -3,7 +3,11 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ElectricityTariffModule } from './electricity-tariff/electricity-tariff.module';
+import { CronModule } from './cron/cron.module';
+import { GoogleSearchService } from './google-search/google-search.service';
+import { MailServiceService } from './mail-service/mail-service.service';
 @Module({
   imports: [
    MongooseModule.forRootAsync({
@@ -17,9 +21,12 @@ import { ElectricityTariffModule } from './electricity-tariff/electricity-tariff
       dbName:config.get<string>('MONGODB_DATABASE')
     })
    }),
-   ElectricityTariffModule
+
+   ScheduleModule.forRoot(),
+   ElectricityTariffModule,
+   CronModule
 ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, GoogleSearchService, MailServiceService],
 })
 export class AppModule {}
