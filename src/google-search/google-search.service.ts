@@ -66,8 +66,8 @@ export class GoogleSearchService {
         const apiKey=this.configService.get<string>('GOOGLE_SEARCH_API_KEY');
         const cseId=this.configService.get<string>('GOOGE_CSE_KEY');
         const searchUrl=this.configService.get<string>('GOOGLE_SEARCH_URL')
-        // const query='site:tangedco.org tariff 2023';
-        const query='anurag minus verma';
+        const query='site:tangedco.org tariff 2023';
+      
        
         const params={
             q:query,
