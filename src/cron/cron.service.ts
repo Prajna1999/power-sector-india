@@ -10,7 +10,7 @@ export class CronService {
     private readonly googleSearchService:GoogleSearchService
   ){}
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async checkForUpdates(){
     this.logger.log('Checking for TANGEDCO tariff updates');
 
